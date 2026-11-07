@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "belveder",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "observability": { "enabled": true },
+  "durable_objects": {
+    "bindings": [{ "name": "HUB", "class_name": "Hub" }],
+  },
+  "exports": { "Hub": { "type": "durable-object", "storage": "sqlite" } },
+}
