@@ -1,0 +1,19 @@
+# Changes here will be overwritten by Copier. Do not edit by hand.
+_commit: v0.5.0
+_src_path: https://github.com/sandrogekeler/AllesSandro
+aislop: true
+claude_action: true
+default_branch: main
+description: Live dashboard of issues, roadmaps, PRs and health across Sandro's GitHub
+    projects
+frontend_dir: .
+kind: vite-web
+languages:
+- typescript
+license: none
+owner: sandrogekeler
+project_name: Belveder
+public: false
+release_notes: false
+repo_name: belveder
+tracking: github-issues

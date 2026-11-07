@@ -1,0 +1,15 @@
+# Project-owned (seeded from AllesSandro). Install once with `lefthook install`.
+pre-commit:
+  parallel: true
+  jobs:
+    - name: no template conflicts
+      run: "! git grep -nE '^(<<<<<<< before updating|>>>>>>> after updating)$' -- {staged_files}"
+    - name: format
+      root: ""
+      glob: "*.{ts,tsx,js,css}"
+      run: pnpm exec prettier --write {staged_files}
+      stage_fixed: true
+    - name: lint
+      root: ""
+      glob: "*.{ts,tsx}"
+      run: pnpm exec eslint {staged_files}
