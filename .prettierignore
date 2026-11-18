@@ -3,3 +3,5 @@
 .github/workflows/
 .aislop/base.yml
 .copier-answers.yml
+worker-configuration.d.ts
+pnpm-lock.yaml

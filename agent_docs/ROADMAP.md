@@ -5,12 +5,13 @@ file says what is next and why. Unchecked items are not done.
 
 ## Now
 
-- [ ] TODO
+- [ ] Receive GitHub App webhooks and backfill nightly
 
 ## Next
 
-- [ ] TODO
+- [ ] PWA shell: GitHub sign-in, issues by priority over WebSocket
+- [ ] Panels: roadmap, PRs waiting, red main, health sweep, template drift
 
 ## Later
 
-- [ ] TODO
+- [ ] Web Push for new p0, red main and review requested
