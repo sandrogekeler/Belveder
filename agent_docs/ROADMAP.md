@@ -15,13 +15,20 @@ file says what is next and why. Unchecked items are not done.
 ## Later
 
 - [ ] Web Push for new p0, red main and review requested
-- [ ] Desktop app: Tauri 2 around the same frontend, Windows first. The phone
-      keeps the PWA. Chosen 2026-11-20: a web page cannot read the disk, and
-      the File System Access API is Chromium only (Sandro tests in Firefox).
+- [ ] Desktop app: Tauri 2 around the same frontend, for Windows, macOS and
+      Linux. The phone keeps the PWA. Chosen 2026-11-20: a web page cannot
+      read the disk, and the File System Access API is Chromium only (Sandro
+      tests in Firefox).
 - [ ] Local projects panel in the desktop app: types are the folders in
       `D:\Private\Projects`, projects the folders in each type (a type can
       name a subfolder, such as `MusicProduction\Projects`). Cards show last
       change and the main file's program, plus GitHub data for git folders.
       Opens a folder in Explorer or a file in its program. Never deletes.
-      File paths stay on the PC.
+      File paths never reach Cloudflare.
 - [ ] New project from a type's template folder
+- [ ] Other machines: the Rust agent that reads and opens projects runs as a
+      service on the iMac and the Rocky Linux machine (no window needed).
+      `tailscale serve` publishes it inside the tailnet; the agent answers
+      only Sandro's `Tailscale-User-Login`. The PWA lists each machine's
+      projects and marks a machine that is off. Unverified: WebKitGTK 4.1 on
+      Rocky, needed only for the Tauri window there.
