@@ -12,8 +12,8 @@ The threat surface of this project and how each part is held. Pair with
 
 ## S1. Inputs
 
-- [ ] TODO: every place untrusted input enters (files, network, IPC, CLI args)
-      and how it is validated.
+- [ ] HTTP requests reach the Worker's `fetch` handler in `src/index.ts`.
+      It answers `GET /health` and returns 404 for everything else.
 
 ## S2. Credentials and secrets
 

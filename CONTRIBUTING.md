@@ -40,5 +40,5 @@ CodeQL, Scorecard, the label gate and the template guard on every pull request.
 ## Template-managed files
 
 Some files come from [AllesSandro](https://github.com/sandrogekeler/AllesSandro)
-and are updated by Renovate PRs; see `agent_docs/CLAUDE.md`, "Files that come
+and are updated by Renovate PRs; see `AGENTS.md`, "Files that come
 from the template".
