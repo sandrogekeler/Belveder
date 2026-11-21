@@ -12,3 +12,6 @@
 # Build output
 dist
 node_modules
+
+# Design mockups: browser drafts with sample data, not app code
+design

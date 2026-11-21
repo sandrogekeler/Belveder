@@ -26,3 +26,6 @@ dist/
 coverage/
 *.tsbuildinfo
 .wrangler/
+
+# Palace mockup build
+design/palace/out/
