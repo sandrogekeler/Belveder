@@ -1,0 +1,475 @@
+<title>Belveder Röntgen</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;600&family=Funnel+Sans:wght@400;500&display=swap">
+<style>
+/* Layout: the palace in x-ray, 3/4 view. Each upper room is a project type and opens its roof when looked at; its newest projects stand in it as exhibits and the rest fill the drawers of an archive cabinet; the Sala Terrena at the entrance is the overview. A drag turns the view a few degrees and it springs back. */
+/* Funnel Display/Sans: OFL, the family of the Register projects page. */
+:root{
+  --bg:#000; --panel:#0c0d0f; --line:#2a2d32; --fg:#e9e6df; --muted:#8d8f93; --dim:#5d6066;
+  --display:"Funnel Display","Helvetica Neue",Helvetica,sans-serif;
+  --text:"Funnel Sans","Helvetica Neue",Helvetica,sans-serif;
+  --xray:#b9d2ee;
+  /* Glass after the portfolio's: frosted face, bright top rim, faint colour split at the sides, soft bevel shade. CSS cannot refract, so the bevel is light only. */
+  --glass-bg:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02) 38%,rgba(255,255,255,.04));
+  --glass-rim:inset 0 1px 0 rgba(255,255,255,.26),inset 0 -1px 0 rgba(255,255,255,.08),inset 1px 0 0 rgba(255,150,130,.12),inset -1px 0 0 rgba(130,180,255,.14),inset 0 0 0 1px rgba(255,255,255,.05),inset 0 12px 22px -16px rgba(255,255,255,.14),inset 0 -10px 18px -14px rgba(0,0,0,.4);
+  color-scheme:dark;
+}
+html,body{height:100%;overflow:hidden}
+body{background:#030508;color:var(--fg);font:15px/1.5 var(--text);margin:0;-webkit-font-smoothing:antialiased}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas.drag{cursor:grabbing}
+canvas.hit{cursor:pointer}
+button,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
+.top{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding-top:calc(env(safe-area-inset-top,0px) + 20px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));pointer-events:none}
+.top>*{pointer-events:auto}
+.brand{font:600 22px/1 var(--display);letter-spacing:-0.01em;margin-right:auto}
+.pill{background:var(--glass-bg);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);box-shadow:var(--glass-rim),0 6px 18px rgba(0,0,0,.35);border:0;border-radius:999px;padding:7px 15px;font-size:14px;color:var(--fg);cursor:pointer;transition:color .2s,box-shadow .2s}
+.pill:hover{box-shadow:var(--glass-rim),inset 0 0 0 1px rgba(255,255,255,.18),0 6px 18px rgba(0,0,0,.35)}
+.pill:disabled{opacity:.4;cursor:default}
+select.pill{appearance:none;padding-right:32px;background:linear-gradient(45deg,transparent 50%,var(--muted) 50%) calc(100% - 16px) 52%/5px 5px no-repeat,linear-gradient(-45deg,transparent 50%,var(--muted) 50%) calc(100% - 11px) 52%/5px 5px no-repeat,var(--glass-bg)}
+select.pill option{background:#111;color:var(--fg)}
+#labels{position:fixed;inset:0;pointer-events:none;z-index:2}
+.lab{text-shadow:0 0 3px #000,0 0 8px #000;position:absolute;left:0;top:0;pointer-events:auto;background:none;border:0;padding:6px 4px;cursor:pointer;font:500 15px/1 var(--display);color:var(--fg);white-space:nowrap;display:flex;align-items:center;gap:7px;will-change:transform,opacity}
+.lab i{width:6px;height:6px;border-radius:50%;background:var(--hue);flex:none}
+.lab b{font-weight:400;color:var(--dim);font-size:13px;font-variant-numeric:tabular-nums}
+.lab:hover,.lab.on{color:var(--hue)}
+#panel{position:fixed;top:calc(env(safe-area-inset-top,0px) + 72px);right:max(12px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:4;width:min(408px,calc(100% - 24px));box-sizing:border-box;border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.01) 30%),rgba(12,16,22,.3);backdrop-filter:blur(14px) saturate(1.6) brightness(1.15);-webkit-backdrop-filter:blur(14px) saturate(1.6) brightness(1.15);box-shadow:var(--glass-rim),0 24px 60px rgba(0,0,0,.55);padding:0;overflow:hidden;display:flex;flex-direction:column;transform:translateX(calc(100% + 24px));transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+#panel.open{transform:none}
+#pbody{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:26px 24px 24px}
+.ph{display:flex;align-items:baseline;gap:8px 12px;margin-bottom:20px;flex-wrap:wrap}
+.ph h2{font:600 34px/1.05 var(--display);letter-spacing:-0.015em;margin:0;margin-right:auto;color:var(--hue);overflow-wrap:anywhere;min-width:0;flex:1}
+.ph{flex-wrap:nowrap!important;align-items:flex-start!important}
+.pill.icon{flex:none;width:38px;height:38px;padding:0;display:grid;place-items:center}
+.pill.icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
+.back{all:unset;cursor:pointer;color:var(--muted);font-size:14px;margin-bottom:10px;display:inline-block}
+.back:hover{color:var(--fg)}
+.back:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
+.projects{list-style:none;margin:0;padding:0}
+.projects button{all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.projects button:hover .n,.projects button:focus-visible .n{color:var(--hue)}
+.projects button:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.projects .n{font:500 16px/1.3 var(--display);overflow-wrap:anywhere;transition:color .2s}
+.projects .w{color:var(--dim);font-size:13px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.projects .m{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;color:var(--muted);font-size:13px}
+.projects .off{opacity:.45}
+.chip{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:4px;padding:0 6px;white-space:nowrap}
+.facts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 18px;margin:0 0 18px;font-size:14px}
+.facts dt{color:var(--dim)}
+.facts dd{margin:0;overflow-wrap:anywhere}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.gh h3,.sub{font:600 15px var(--display);margin:24px 0 8px;color:var(--muted)}
+.step{display:none}
+@keyframes in-l{from{transform:translateX(28px);opacity:.15}to{transform:none;opacity:1}}
+@keyframes in-r{from{transform:translateX(-28px);opacity:.15}to{transform:none;opacity:1}}
+#pbody.in-l{animation:in-l .32s cubic-bezier(.2,.7,.2,1)}
+#pbody.in-r{animation:in-r .32s cubic-bezier(.2,.7,.2,1)}
+.rim{position:relative}
+.selwrap{display:inline-block;border-radius:999px}
+.tiles{gap:8px;background:none;border:0}
+.tile{background:var(--glass-bg);box-shadow:var(--glass-rim);border-radius:18px}
+.tile:hover{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05))}
+.projects button{border-bottom-color:rgba(255,255,255,.08)}
+#chips{display:none}
+.olab{position:absolute;left:0;top:0;font:500 14px/1 var(--display);color:var(--hue);text-shadow:0 0 3px #000,0 0 8px #000;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .25s;padding-bottom:6px}
+@media (max-width:700px){
+  #panel::before{content:"";display:block;flex:none;width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.25);margin:-8px auto 12px}
+  .step{display:flex;justify-content:space-between;gap:12px;margin:0 0 10px}
+  .step button{all:unset;cursor:pointer;color:var(--muted);font-size:14px;padding:6px 0;white-space:nowrap}
+  .step button:disabled{visibility:hidden}
+  .step button:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
+  .lab{display:none}
+  #panel{top:auto;left:6px;right:6px;bottom:calc(env(safe-area-inset-bottom,0px) + 6px);width:auto;height:calc(100% - env(safe-area-inset-top,0px) - 84px);border-radius:30px;padding-top:20px;transform:translateY(calc(100% + 24px))}
+  /* A bottom sheet: it rests at 58% of the screen, drags up to full height, and only then does its list scroll. */
+  #panel.open{transform:translateY(var(--y,40%))}
+  #panel.drag{transition:none}
+  #pbody [data-close]{display:none}
+  #panel:not(.full) #pbody{overflow:hidden}
+  #pbody{padding:0 max(16px,env(safe-area-inset-right,0px)) 20px max(16px,env(safe-area-inset-left,0px))}
+  .ph h2{font-size:28px}
+  .ph h2.long{font-size:22px;line-height:1.15}
+  #chips{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:3;gap:8px;overflow-x:auto;scrollbar-width:none;padding:12px max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 16px) max(16px,env(safe-area-inset-left,0px))}
+  #chips button{flex:none}
+}
+@media (prefers-reduced-motion:reduce){#panel{transition:none}#pbody.in-l,#pbody.in-r{animation:none}}
+/*@PANELCSS*/
+</style>
+
+<canvas id="c" aria-label="Upper Belvedere as a menu"></canvas>
+<div class="top">
+  <span class="brand">Belveder</span>
+  <span class="selwrap rim"><select id="machine" class="pill" aria-label="Machine"></select></span>
+</div>
+<div id="labels"></div>
+<nav id="chips" aria-label="Rooms"></nav>
+<aside id="panel" class="rim" aria-live="polite"><div id="pbody"></div></aside>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/*@CORE*/
+/*@DATA*/
+(() => {
+  const canvas = document.getElementById('c');
+  const R = makeRenderer(canvas);
+  const scene = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 400);
+  const P = buildPalace();
+  scene.add(P.root);
+  const FG = new THREE.Color('#b9d2ee');
+  const labels = document.getElementById('labels'), chips = document.getElementById('chips');
+  const panel = document.getElementById('panel'), pbody = document.getElementById('pbody');
+  const K = reduced ? 900 : 70;
+  const OVERVIEW = 'overview';
+  const olab = document.createElement('div'); olab.className = 'olab'; document.getElementById('labels').append(olab);
+
+  let machine = '';
+  const visible = (pr) => !machine || pr.machine === machine;
+
+  // Each pavilion holds one project type. A room has a few fixed slots for its most recently changed
+  // projects; the rest go into the drawers of an archive cabinet on the back wall.
+  const hash = (s) => { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
+  const byRecent = (a, b) => a.hours - b.hours;
+  function roomSlots(p) {
+    if (p.type === 'oct') return [[0, 0.15], [-0.5, 0.45], [0.5, 0.45], [-0.55, -0.15], [0.55, -0.15]].map(([x, z]) => [x * p.r, z * p.r]);
+    const iw = p.w - 0.18, id = p.d - 0.18, back = -id / 2 + 1.3, front = id / 2 - 0.6;
+    const cols = Math.min(3, Math.floor((iw - 1) / 1.2) + 1), rows = Math.min(3, Math.floor((front - back) / 1.3) + 1);
+    const sx = Math.min(1.4, (iw - 1) / Math.max(1, cols - 1)), sz = Math.min(1.5, (front - back) / Math.max(1, rows - 1)), mid = (back + front) / 2;
+    const out = [];
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) out.push([(c - (cols - 1) / 2) * sx, mid + (r - (rows - 1) / 2) * sz]);
+    return out;
+  }
+  // The object follows the program: sculpture for 3D, screen on a desk for code, cabinet for games, record for audio.
+  const edges = (g, x, y, z, th = 1) => Array.from(new THREE.EdgesGeometry(g.translate(x, y, z), th).attributes.position.array);
+  const SHAPES = {
+    sculpt: [...edges(new THREE.BoxGeometry(0.34, 0.45, 0.34), 0, 0.225, 0), ...edges(new THREE.IcosahedronGeometry(0.2, 0), 0, 0.67, 0)],
+    screen: [...edges(new THREE.BoxGeometry(0.62, 0.4, 0.36), 0, 0.2, 0), ...edges(new THREE.BoxGeometry(0.48, 0.3, 0.03), 0, 0.58, -0.08)],
+    arcade: [...edges(new THREE.BoxGeometry(0.38, 0.74, 0.32), 0, 0.37, 0), ...edges(new THREE.BoxGeometry(0.28, 0.2, 0.02), 0, 0.5, 0.17)],
+    disc: [...edges(new THREE.BoxGeometry(0.46, 0.34, 0.46), 0, 0.17, 0), ...edges(new THREE.CylinderGeometry(0.19, 0.19, 0.02, 24), 0, 0.36, 0, 30)],
+  };
+  const kindOf = (pr) => (pr.ext === 'hip' || pr.ext === 'blend' || pr.type === '3D' ? 'sculpt' : pr.type === 'SoftwareDevelopment' ? 'screen' : pr.type === 'GameDevelopment' || pr.type === 'Videogames' ? 'arcade' : 'disc');
+  const objHits = [];
+  const hitGeo = new THREE.BoxGeometry(0.62, 0.9, 0.62).translate(0, 0.45, 0), hitMat = new THREE.MeshBasicMaterial({ visible: false });
+  P.pavs.forEach((p, i) => {
+    const type = TYPES[i];
+    p.type_ = type; p.key = type.id;
+    p.col = new THREE.Color(type.hue);
+    p.hov = S(); p.sel = S();
+    p.projects = PROJECTS.filter((pr) => pr.type === type.id).sort(byRecent);
+    const slots = roomSlots(p), taken = [];
+    p.shown = p.projects.slice(0, slots.length); p.archive = p.projects.slice(slots.length);
+    p.projects.forEach((pr) => { pr.mat = lineMat(); pr.hl = 0; pr.p = p; });
+    // A project keeps the slot its name hashes to while it stays on display; newer projects pick first.
+    p.shown.forEach((pr) => {
+      let s = hash(pr.name) % slots.length;
+      while (taken[s]) s = (s + 1) % slots.length;
+      taken[s] = pr;
+      const [x, z] = slots[s];
+      const m = segs(SHAPES[kindOf(pr)], pr.mat); m.position.set(x, FL + 0.03, z); p.upper.add(m);
+      const h = new THREE.Mesh(hitGeo, hitMat); h.position.copy(m.position); h.userData.pr = pr; p.upper.add(h); objHits.push(h);
+      pr.focus = new THREE.Vector3(p.x + x, FL + 0.45, z);
+    });
+    if (p.archive.length) {
+      const n = p.archive.length, cw = p.type === 'oct' ? p.r * 0.62 : Math.min(p.w - 0.8, 3.2), ch = Math.min(0.95, p.h - FL - 0.35), cd = 0.34;
+      const cz = (p.type === 'oct' ? -p.r * 0.86 : -(p.d - 0.18) / 2) + cd / 2 + 0.06;
+      p.cabMat = lineMat();
+      const body = segs(edges(new THREE.BoxGeometry(cw, ch, cd), 0, FL + 0.03 + ch / 2, cz), p.cabMat); p.upper.add(body);
+      const h = new THREE.Mesh(new THREE.BoxGeometry(cw, ch, cd + 0.3), hitMat); h.position.set(0, FL + 0.03 + ch / 2, cz); h.userData.cab = p; p.upper.add(h); objHits.push(h);
+      const cols = Math.max(1, Math.round(Math.sqrt((n * cw) / ch))), rows = Math.ceil(n / cols), dw = cw / cols, dh = ch / rows;
+      const drawer = edges(new THREE.BoxGeometry(dw - 0.035, dh - 0.035, 0.05), 0, 0, 0);
+      p.archive.forEach((pr, j) => {
+        const x = -cw / 2 + dw * (j % cols + 0.5), y = FL + 0.03 + ch - dh * (Math.floor(j / cols) + 0.5), z = cz + cd / 2 - 0.02;
+        const m = segs(drawer, pr.mat); m.position.set(x, y, z); p.upper.add(m);
+        pr.drawer = m; pr.z0 = z;
+        pr.focus = new THREE.Vector3(p.x + x, y, z + 0.2);
+      });
+    }
+    const mk = (cls) => {
+      const b = document.createElement('button'); b.className = cls; b.style.setProperty('--hue', type.hue);
+      b.innerHTML = cls === 'lab' ? `<i></i>${type.name}<b></b>` : type.name;
+      b.onclick = () => open(p.key); b.onmouseenter = () => (hoverLab = p.key); b.onmouseleave = () => (hoverLab = null);
+      return b;
+    };
+    p.lab = mk('lab'); labels.append(p.lab);
+    const chip = mk('pill'); chip.classList.add('rim'); chips.append(chip);
+  });
+  const salaLab = document.createElement('button');
+  salaLab.className = 'lab'; salaLab.style.setProperty('--hue', '#e9e6df'); salaLab.innerHTML = '<i></i>Overview';
+  salaLab.onclick = () => open(OVERVIEW); salaLab.onmouseenter = () => (hoverLab = OVERVIEW); salaLab.onmouseleave = () => (hoverLab = null);
+  labels.append(salaLab);
+  const salaChip = document.createElement('button'); salaChip.className = 'pill rim'; salaChip.textContent = 'Overview'; salaChip.onclick = () => open(OVERVIEW);
+  chips.prepend(salaChip);
+  // The Sala Terrena, ground floor of the middle pavilion, is its own room.
+  const salaHit = new THREE.Mesh(new THREE.BoxGeometry(5, FL, 10.5).translate(0, FL / 2, 0.75), new THREE.MeshBasicMaterial({ visible: false }));
+  salaHit.userData.id = OVERVIEW;
+  const sala = { hov: S(), sel: S() };
+
+  const machineSel = document.getElementById('machine');
+  machineSel.innerHTML = '<option value="">All machines</option>' + Object.entries(MACHINES).map(([k, v]) => `<option value="${k}">${v}${OFFLINE.includes(k) ? ' (offline)' : ''}</option>`).join('');
+  machineSel.onchange = () => { machine = machineSel.value; if (view) show(view); updateCounts(); };
+  function updateCounts() { P.pavs.forEach((p) => (p.lab.querySelector('b').textContent = p.projects.filter(visible).length)); }
+  updateCounts();
+
+  // Panel views: the overview, a room (type) or one project.
+  let view = null, room = null, hoverLab = null, hoverHit = null, hoverProject = null, hoverObj = null;
+  const projectRow = (pr, withType) => {
+    const off = OFFLINE.includes(pr.machine);
+    const prog = pr.ext ? `<span class="chip">${PROGRAMS[pr.ext]}</span>` : '';
+    const ci = pr.repo ? `<span class="st ${DATA.ci[pr.repo]}">${STATE[DATA.ci[pr.repo]]}</span>` : '';
+    const iss = pr.repo ? DATA.issues.filter((x) => x[1] === pr.repo).length : 0;
+    return `<li class="${off ? 'off' : ''}"><button data-p="${PROJECTS.indexOf(pr)}"><span class="n">${esc(pr.name)}</span><span class="w">${ago(pr.hours)}</span><span class="m">${withType ? `<span>${TYPES.find((t) => t.id === pr.type).name}</span>` : ''}<span>${MACHINES[pr.machine]}${off ? ', offline' : ''}</span>${prog}${ci}${iss ? `<span>${iss} issue${iss > 1 ? 's' : ''}</span>` : ''}</span></button></li>`;
+  };
+  const ORDER = TYPES.map((t) => t.id);
+  const isProject = (v) => !!v && typeof v === 'object';
+  const nameOf = (v) => (isProject(v) ? v.name : v === OVERVIEW ? 'Overview' : TYPES.find((t) => t.id === v).name);
+  // Rooms neighbour along the palace, left to right; the hall sits between Music production and 3D.
+  // Projects neighbour within their room, newest first.
+  function neighbour(v, dir) {
+    // Projects loop like a carousel.
+    if (isProject(v)) { const l = v.p.projects.filter(visible); return l.length > 1 ? l[(l.indexOf(v) + dir + l.length) % l.length] : null; }
+    if (v === OVERVIEW) return ORDER[dir > 0 ? 4 : 2];
+    return ORDER[ORDER.indexOf(v) + dir] || null;
+  }
+  function stepRow(v) {
+    const a = neighbour(v, -1), b = neighbour(v, 1);
+    return `<div class="step"><button data-step="-1"${a ? '' : ' disabled'}>‹ ${a ? esc(nameOf(a)) : ''}</button><button data-step="1"${b ? '' : ' disabled'}>${b ? esc(nameOf(b)) : ''} ›</button></div>`;
+  }
+  function step(dir) {
+    if (!view) return;
+    const n = neighbour(view, dir);
+    if (n) show(n, dir);
+  }
+  // Down goes up one level: project to room, room to the palace.
+  function back() { if (isProject(view)) show(view.type, 0); else close(); }
+  function show(v, dir = 0) {
+    view = v;
+    let html = '', top = '', hue = '#e9e6df';
+    if (v === OVERVIEW) {
+      const recent = PROJECTS.filter(visible).sort((a, b) => a.hours - b.hours).slice(0, 5);
+      html = `<div class="ph"><h2>Overview</h2><button class="pill icon" data-close aria-label="Close" title="Close"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>${panelHTML('overview', '')}<h3 class="sub">Recent</h3><ul class="projects">${recent.map((pr) => projectRow(pr, true)).join('')}</ul>`;
+    } else if (typeof v === 'string') {
+      const p = P.pavs.find((q) => q.key === v); hue = p.type_.hue;
+      const shown = p.shown.filter(visible), arch = p.archive.filter(visible);
+      html = `<div class="ph"><h2>${p.type_.name}</h2><button class="pill icon" aria-label="New project" title="New project"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></button><button class="pill icon" data-close aria-label="Close" title="Close"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>${shown.length + arch.length ? `<ul class="projects">${shown.map((pr) => projectRow(pr)).join('')}</ul>` : '<p class="empty">No projects on this machine.</p>'}${arch.length ? `<h3 class="sub" id="archive">Archive ${arch.length}</h3><ul class="projects">${arch.map((pr) => projectRow(pr)).join('')}</ul>` : ''}`;
+    } else {
+      const pr = v; hue = pr.p.type_.hue;
+      const off = OFFLINE.includes(pr.machine);
+      const path = pr.machine === 'pc' ? `D:\\Private\\Projects\\${pr.type}\\${pr.name}` : 'Not set yet';
+      top = `<button class="back" data-room="${pr.type}">← ${pr.p.type_.name}</button>`;
+      html = `<div class="ph"><h2${pr.name.length > 16 ? ' class="long"' : ''}>${esc(pr.name)}</h2><button class="pill icon" data-close aria-label="Close" title="Close"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
+        <dl class="facts"><dt>Machine</dt><dd>${MACHINES[pr.machine]}${off ? ', offline' : ''}</dd><dt>Changed</dt><dd>${ago(pr.hours)} ago</dd>${pr.ext ? `<dt>Main file</dt><dd>${esc(pr.name)}.${pr.ext}</dd>` : ''}<dt>Folder</dt><dd>${esc(path)}</dd></dl>
+        <div class="acts"><button class="pill"${off ? ' disabled' : ''}>Show in folder</button>${pr.ext ? `<button class="pill"${off ? ' disabled' : ''}>Open in ${PROGRAMS[pr.ext]}</button>` : ''}${pr.repo ? '<button class="pill">GitHub</button>' : ''}</div>
+        ${pr.repo ? `<div class="gh"><h3>Issues</h3>${panelHTML('issues', pr.repo)}<h3>Pull requests</h3>${panelHTML('prs', pr.repo)}<h3>Roadmap</h3>${panelHTML('roadmap', pr.repo)}<h3>Template</h3>${panelHTML('drift', pr.repo)}</div>` : ''}`;
+    }
+    panel.style.setProperty('--hue', hue);
+    const k = v === OVERVIEW ? OVERVIEW : typeof v === 'string' ? v : v.type;
+    pbody.innerHTML = top + stepRow(v) + html;
+    pbody.classList.remove('in-l', 'in-r');
+    if (dir) { void pbody.offsetWidth; pbody.classList.add(dir > 0 ? 'in-l' : 'in-r'); }
+    if (dir) pbody.scrollTop = 0;
+    if (!panel.classList.contains('open')) setSheet(HALF());
+    panel.classList.add('open');
+    room = v === OVERVIEW ? OVERVIEW : typeof v === 'string' ? v : v.type;
+    pbody.querySelectorAll('[data-close]').forEach((b) => (b.onclick = close));
+    pbody.querySelectorAll('[data-step]').forEach((b) => (b.onclick = () => step(+b.dataset.step)));
+    pbody.querySelectorAll('[data-room]').forEach((b) => (b.onclick = () => show(b.dataset.room)));
+    pbody.querySelectorAll('[data-p]').forEach((b) => {
+      const pr = PROJECTS[+b.dataset.p];
+      b.onclick = () => show(pr);
+      b.onmouseenter = b.onfocus = () => (hoverProject = pr);
+      b.onmouseleave = b.onblur = () => (hoverProject = null);
+    });
+    pbody.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => show('SoftwareDevelopment')));
+    pbody.querySelectorAll('.pill,.tile').forEach((b) => b.classList.add('rim'));
+    hoverProject = null;
+    P.pavs.forEach((p) => p.lab.classList.toggle('on', p.key === room));
+    salaLab.classList.toggle('on', room === OVERVIEW);
+  }
+  function open(key) { if (key === room && view === key) return; show(key); }
+  function close() { setSheet(HALF()); view = null; room = null; hoverProject = null; panel.classList.remove('open'); P.pavs.forEach((p) => p.lab.classList.remove('on')); salaLab.classList.remove('on'); }
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') back(); });
+  // A drag turns the view a few degrees; on release it springs back.
+  let BASE_AZ = 0.55, BASE_EL = 0.5;
+  const az = S(BASE_AZ), el = S(BASE_EL), dist = S(70), tgt = new THREE.Vector3(0, 3, 1), tgtGoal = new THREE.Vector3();
+  let azGoal = BASE_AZ, elGoal = BASE_EL, offX = 0, offY = 0;
+  let down = null, moved = false;
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  const hitList = [...P.hulls, salaHit];
+  function pick(e) {
+    ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+    ray.setFromCamera(ndc, cam);
+    // Inside an open room its exhibits and cabinet come first.
+    if (room && room !== OVERVIEW) {
+      const o = ray.intersectObjects(objHits.filter((h) => (h.userData.pr || {}).p?.key === room || h.userData.cab?.key === room))[0];
+      if (o) return o.object.userData.pr || o.object.userData.cab;
+    }
+    const hs = ray.intersectObjects(hitList);
+    // The Sala Terrena sits inside the middle pavilion; it wins where both are hit.
+    const h = hs.find((x) => x.object === salaHit) || hs[0];
+    if (!h) return null;
+    const id = h.object.userData.id;
+    return id === OVERVIEW ? OVERVIEW : P.pavs.find((p) => p.id === id).key;
+  }
+  canvas.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; moved = false; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener('pointermove', (e) => {
+    if (down) {
+      const dx = e.clientX - down.x, dy = e.clientY - down.y;
+      if (Math.hypot(dx, dy) > 5) { moved = true; canvas.classList.add('drag'); }
+      if (moved) { azGoal = BASE_AZ - Math.tanh(dx / 380) * 0.14; elGoal = BASE_EL + Math.tanh(dy / 380) * 0.06; }
+    } else if (e.pointerType === 'mouse') { const k = pick(e); hoverHit = typeof k === 'string' ? k : null; hoverObj = isProject(k) && !k.projects ? k : null; canvas.classList.toggle('hit', !!k); }
+  });
+  const release = (e) => {
+    if (down && !moved && e.type === 'pointerup') {
+      const k = pick(e);
+      if (k && k.projects) { show(k.key); document.getElementById('archive')?.scrollIntoView({ behavior: 'smooth' }); }
+      else if (isProject(k)) show(k);
+      else if (k) open(k); else back();
+    }
+    if (down && moved && e.type === 'pointerup') swipe(e.clientX - down.x, e.clientY - down.y);
+    down = null; azGoal = BASE_AZ; elGoal = BASE_EL; canvas.classList.remove('drag');
+  };
+  // Swipes: sideways switches rooms, up opens the hall, down closes.
+  function swipe(dx, dy) {
+    const ax = Math.abs(dx), ay = Math.abs(dy);
+    if (ax > 45 && ax > ay * 1.4) { if (room) step(dx < 0 ? 1 : -1); }
+    else if (ay > 45 && ay > ax * 1.4) { if (dy < 0 && !room) open(OVERVIEW); else if (dy > 0 && room) back(); }
+  }
+  // Phone sheet. y is how far the full-height sheet sits below its top position: HALF() at rest, 0 when full.
+  let sheetY = 0;
+  const HALF = () => Math.max(0, panel.offsetHeight - H * 0.58);
+  function setSheet(y) { sheetY = y; panel.style.setProperty('--y', y + 'px'); panel.classList.toggle('full', y <= 1); }
+  let touch = null;
+  panel.addEventListener('touchstart', (e) => {
+    const t = e.touches[0];
+    touch = { x: t.clientX, y: t.clientY, y0: sheetY, mode: null, last: t.clientY, time: performance.now(), v: 0 };
+  }, { passive: true });
+  panel.addEventListener('touchmove', (e) => {
+    if (!touch || !narrow) return;
+    const t = e.touches[0], dx = t.clientX - touch.x, dy = t.clientY - touch.y;
+    if (!touch.mode && Math.hypot(dx, dy) > 8) {
+      if (Math.abs(dx) > Math.abs(dy) * 1.4) touch.mode = 'side';
+      // The sheet moves while it is not full, or when the full list is at its top and the finger pulls down.
+      else touch.mode = sheetY > 1 || (dy > 0 && pbody.scrollTop <= 0) ? 'sheet' : 'scroll';
+      if (touch.mode === 'sheet') panel.classList.add('drag');
+    }
+    const now = performance.now();
+    touch.v = (t.clientY - touch.last) / Math.max(1, now - touch.time); touch.last = t.clientY; touch.time = now;
+    if (touch.mode === 'sheet') { e.preventDefault(); const y = touch.y0 + dy; setSheet(y < 0 ? y * 0.2 : y); }
+  }, { passive: false });
+  panel.addEventListener('touchend', (e) => {
+    if (!touch) return;
+    const t = e.changedTouches[0], dx = t.clientX - touch.x, dy = t.clientY - touch.y, half = HALF();
+    panel.classList.remove('drag');
+    if (touch.mode === 'side' && Math.abs(dx) > 50) { step(dx < 0 ? 1 : -1); }
+    else if (touch.mode === 'sheet') {
+      // A flick decides; otherwise the nearer rest wins. Pulled well below half, it goes back a level.
+      if (sheetY > half + 70 || (touch.y0 >= half - 1 && touch.v > 0.6)) { setSheet(half); back(); }
+      else if (touch.v < -0.3) setSheet(0);
+      else if (touch.v > 0.3) setSheet(half);
+      else setSheet(sheetY < half / 2 ? 0 : half);
+    }
+    touch = null;
+  }, { passive: true });
+  canvas.addEventListener('pointerup', release);
+  canvas.addEventListener('pointercancel', release);
+  canvas.addEventListener('pointerleave', () => { hoverHit = null; });
+
+  let W = 0, H = 0, narrow = false;
+  function resize() { W = innerWidth; H = innerHeight; narrow = W <= 700; BASE_AZ = narrow ? 0.8 : 0.55; BASE_EL = narrow ? 0.56 : 0.5; if (!down) { azGoal = BASE_AZ; elGoal = BASE_EL; } setLineSize(W, H, R.getPixelRatio()); R.setSize(W, H, false); cam.aspect = W / H; cam.updateProjectionMatrix(); if (!panel.classList.contains("full")) setSheet(HALF()); }
+  addEventListener('resize', resize); resize();
+
+  const hall = S(0), near = S(0);
+
+  const tmp = new THREE.Vector3();
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const sel = room && room !== OVERVIEW && P.pavs.find((p) => p.key === room);
+    const hov = hoverLab || hoverHit;
+    const t = Math.tan((cam.fov * Math.PI) / 360);
+    const fitAll = Math.max((narrow ? 14.5 : 18.5) / (t * cam.aspect), 12.5 / t);
+    if (isProject(view)) { tgtGoal.copy(view.focus); spring(dist, narrow ? 8.5 : 7.5, dt, K * 0.6); }
+    else if (sel) { tgtGoal.set(sel.x, 2.2, 0.5); spring(dist, Math.max(sel.type === 'center' ? 22 : 18, 6.5 / (t * Math.min(cam.aspect, 1.4))), dt, K * 0.6); }
+    else if (room === OVERVIEW) { tgtGoal.set(0, 0.75, 1.2); spring(dist, Math.max(15, 6.2 / (t * Math.min(cam.aspect, 1.4))), dt, K * 0.6); }
+    else { tgtGoal.set(0, 3, 1); spring(dist, fitAll, dt, K * 0.6); }
+    tgt.x = damp(tgt.x, tgtGoal.x, 4, dt); tgt.y = damp(tgt.y, tgtGoal.y, 4, dt); tgt.z = damp(tgt.z, tgtGoal.z, 4, dt);
+    spring(az, azGoal, dt, K * 0.8); spring(el, elGoal, dt, K * 0.8);
+    const a = az.x, e = el.x, d = dist.x;
+    cam.position.set(tgt.x + d * Math.cos(e) * Math.sin(a), tgt.y + d * Math.sin(e), tgt.z + d * Math.cos(e) * Math.cos(a));
+    cam.lookAt(tgt);
+    // Keep the chosen room centred in the space the panel leaves free.
+    offX = damp(offX, room && !narrow ? -210 : 0, 5, dt);
+    offY = damp(offY, room && narrow ? H * 0.29 : 0, 5, dt);
+    cam.setViewOffset(W, H, -offX, offY, W, H);
+
+    const anySel = !!room;
+    // Close up, the stacked x-ray shells wash out; fade the building so the exhibit reads.
+    spring(near, isProject(view) ? 1 : 0, dt, K * 0.6);
+    const shellK = 1 - 0.88 * near.x, wallK = 1 - 0.65 * near.x;
+    // In the hall view the middle pavilion's upper floor and roof lift away.
+    spring(hall, room === OVERVIEW ? 1 : 0, dt, reduced ? 900 : 40);
+    for (const p of P.pavs) {
+      spring(p.hov, p.key === hov ? 1 : 0, dt, K * 1.6);
+      spring(p.sel, p.key === room ? 1 : 0, dt, K);
+      // Roofs stay shut; only the room being looked at opens, and a hovered one lifts slightly.
+      const opened = Math.max(p.sel.x, p.hov.x * 0.18);
+      p.roofPivot.rotation.x = -opened * 1.95;
+      const up = p.type === 'center' ? hall.x * 3.4 : 0;
+      p.upper.position.y = up;
+      p.roofLift.position.y = opened * 0.25 + up;
+      const k = Math.min(1, Math.max(p.hov.x, p.sel.x));
+      const dim = !anySel || p.key === room ? 1 : room === OVERVIEW ? (p.type === 'center' ? 0.8 : 0.22) : 0.35;
+      p.wallMat.color.copy(FG).lerp(p.col, k * 0.6);
+      p.wallMat.opacity = (0.42 + 0.4 * k) * dim * wallK;
+      p.shellMat.color.copy(p.wallMat.color);
+      p.shellMat.opacity = (0.3 + 0.08 * k) * dim * shellK;
+      p.roofMat.color.copy(p.wallMat.color);
+      p.roofMat.opacity = (0.5 - 0.3 * opened + 0.2 * k) * dim * wallK;
+      p.roofShellMat.color.copy(p.wallMat.color);
+      p.roofShellMat.opacity = (0.3 - 0.18 * opened) * dim * shellK;
+      p.roomLineMat.color.copy(p.col);
+      p.roomLineMat.opacity = (opened * 0.3 + 0.5 * k) * dim * (1 - 0.5 * near.x);
+      p.roomFillMat.color.copy(p.col);
+      p.roomFillMat.opacity = (0.05 * k + 0.02 * opened) * shellK;
+      const focused = isProject(view) && view.p === p;
+      for (const pr of p.projects) {
+        const on = pr === hoverProject || pr === hoverObj || view === pr;
+        const target = !visible(pr) ? 0.05 : on ? 1 : focused ? 0.25 : 0.4 + 0.3 * k;
+        pr.hl = damp(pr.hl, target, 10, dt);
+        pr.mat.color.copy(p.col);
+        pr.mat.opacity = pr.hl * dim * (OFFLINE.includes(pr.machine) ? 0.5 : 1);
+        if (pr.drawer) pr.drawer.position.z = damp(pr.drawer.position.z, pr.z0 + (view === pr ? 0.28 : on ? 0.08 : 0), 8, dt);
+      }
+      if (p.cabMat) { p.cabMat.color.copy(p.col); p.cabMat.opacity = (0.25 + 0.4 * k) * dim; }
+      if (!narrow) {
+        tmp.set(p.x, p.h + 0.35 + (1 - opened) * ((p.dome || p.roof) + 0.2), 0);
+        const [sx, sy] = toScreen(tmp, cam, W, H);
+        p.lab.style.transform = `translate3d(${sx.toFixed(1)}px,${sy.toFixed(1)}px,0) translate(-50%,-110%)`;
+        p.lab.style.opacity = (anySel && p.key !== room ? 0.4 : 0.75 + 0.25 * k).toFixed(2);
+      }
+    }
+    spring(sala.hov, hov === OVERVIEW ? 1 : 0, dt, K * 1.6);
+    spring(sala.sel, room === OVERVIEW ? 1 : 0, dt, K);
+    const ks = Math.min(1, Math.max(sala.hov.x, sala.sel.x));
+    P.salaMat.color.copy(FG); P.salaMat.opacity = (0.3 + 0.6 * ks) * (anySel && room !== OVERVIEW ? 0.5 : 1) * wallK;
+    P.groundMat.color.copy(FG); P.groundMat.opacity = 0.16 * wallK;
+    if (!narrow) {
+      tmp.set(0, 0, 6.6);
+      const [sx, sy] = toScreen(tmp, cam, W, H);
+      salaLab.style.transform = `translate3d(${sx.toFixed(1)}px,${sy.toFixed(1)}px,0) translate(-50%,10%)`;
+      salaLab.style.opacity = (anySel && room !== OVERVIEW ? 0.4 : 0.75 + 0.25 * ks).toFixed(2);
+    }
+    const lp = hoverObj || hoverProject || (isProject(view) ? view : null);
+    if (lp && lp.focus) {
+      tmp.copy(lp.focus); tmp.y += lp.drawer ? 0.15 : 0.45;
+      const [sx, sy] = toScreen(tmp, cam, W, H);
+      olab.textContent = lp.name; olab.style.setProperty('--hue', lp.p.type_.hue);
+      olab.style.transform = `translate3d(${sx.toFixed(1)}px,${sy.toFixed(1)}px,0) translate(-50%,-100%)`;
+      olab.style.opacity = 1;
+    } else olab.style.opacity = 0;
+    R.render(scene, cam);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
