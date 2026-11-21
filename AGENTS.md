@@ -3,9 +3,13 @@
 Live dashboard of issues, roadmaps, PRs and health across Sandro's GitHub projects
 
 <!-- Project-owned. Seeded once from sandrogekeler/AllesSandro; rewrite freely.
-Keep it under ~200 lines: it is imported into every session by ../CLAUDE.md.
+Keep it under ~200 lines: CLAUDE.md and GEMINI.md import it into every session.
 Put rules that only matter for some files in .claude/rules/ with `paths:`
 frontmatter instead, so they load only when those files are touched. -->
+
+Rules shared with other projects are in `.claude/rules/`. An agent that does
+not load that directory itself reads `working.md`, `writing.md` and
+`simplicity.md` there before starting.
 
 ## Stack
 - TypeScript, pnpm (package in `./`)
@@ -39,6 +43,9 @@ pnpm typecheck && pnpm lint && pnpm test
 python3 .claude/suite-check.py   # every health check in .claude/suite.json
 ```
 
+Before calling a task done, run `python3 .claude/suite-check.py`. A check it
+reports as skipped did not pass.
+
 ## Task tracking
 Work is tracked in GitHub Issues. Every issue carries a `type:`, an `area:` and
 a priority (`p0`-`p3`) label. Close issues from the pull request with
@@ -58,27 +65,11 @@ a priority (`p0`-`p3`) label. Close issues from the pull request with
 
 ## Files that come from the template
 
-This repo was created from sandrogekeler/AllesSandro and is kept in step with it
-by Renovate (`.copier-answers.yml` records the version). Two kinds of file:
-
-- **Locked** (re-applied on every template update): `.claude/suite-*.py`,
-  `.github/workflows/{codeql,scorecard,pr-labelled,labels,template-guard}.yml`
-  (CodeQL and Scorecard only on a public repo) and the optional `aislop.yml`,
-  `claude.yml`, `.aislop/base.yml`, `.github/scripts/changelog-section.py`,
-  `.github/scripts/release-notes.py`, `.claude/rules/writing.md`. Do not edit them here: change
-  AllesSandro instead. A local edit is kept but shows up as a merge conflict on
-  the next template update.
-- **Seeded** (created once, owned by this repo): everything else, including
-  this file.
-
-A template-update PR with `<<<<<<< before updating` markers: see
-`.claude/rules/template-files.md`.
+Some files are owned by sandrogekeler/AllesSandro and must not be edited here:
+`.claude/rules/template-files.md` lists them.
 
 ## Do not
 
 - Commit secrets, `.env` files or credentials.
 - Edit generated files or lockfiles by hand; regenerate them.
-
-## Deeper rules, loaded on demand
-
-`.claude/rules/*.md`: each one names the paths that load it.
+- Add a dependency without reading `agent_docs/DEPENDENCIES.md`.
